@@ -5,6 +5,9 @@ module Api
     
       # GET /products
       def index
+        
+        # binding.pry
+        
         category_params = params[:type]
         @products = category_params == 'productos' ? Product.all : Category.find_by(name: category_params).products
     
