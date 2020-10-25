@@ -6,9 +6,6 @@ module Api
     
       # GET /products
       def index
-        
-        # binding.pry
-        
         category_params = params[:type]
         @products = category_params == 'productos' ? Product.all : Category.find_by(name: category_params).products
     
@@ -22,11 +19,12 @@ module Api
     
       # POST /products
       def create
-        @product = Product.new(product_params)
-        @product.image_url = Cloudinary::Uploader.upload(params[:image_file][:image], :folder => "artykrea/") if Rails.env.production? 
-
+        @product = Product.new(product_params)        
         if @product.save
-          if !Rails.env.production? 
+          if Rails.env.production?
+            result_image = Cloudinary::Uploader.upload(params[:image_file][:image], :folder => "artykrea/") 
+            @product.update(image_url: result_image['secure_url'])
+          else  
             @product.update(image: params[:image_file][:image])
             @product.update(image_url: rails_blob_url(@product.image))  
           end
