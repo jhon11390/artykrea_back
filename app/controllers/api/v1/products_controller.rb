@@ -1,6 +1,7 @@
 module Api
   module V1
     class ProductsController < ApplicationController
+      include Rails.application.routes.url_helpers
       before_action :set_product, only: [:show, :update, :destroy]
     
       # GET /products
@@ -22,8 +23,13 @@ module Api
       # POST /products
       def create
         @product = Product.new(product_params)
-    
+        @product.image_url = Cloudinary::Uploader.upload(params[:image_file][:image], :folder => "artykrea/") if Rails.env.production? 
+
         if @product.save
+          if !Rails.env.production? 
+            @product.update(image: params[:image_file][:image])
+            @product.update(image_url: rails_blob_url(@product.image))  
+          end
           render json: @product, status: :created
         else
           render json: @product.errors, status: :unprocessable_entity
@@ -52,7 +58,7 @@ module Api
     
         # Only allow a trusted parameter "white list" through.
         def product_params
-          params.require(:product).permit(:name, :description, :price, :qty, :published, :category_id, :image)
+          params.require(:product).permit(:name, :description, :price, :qty, :published, :category_id, :image_url, :image)
         end
     end
   end
